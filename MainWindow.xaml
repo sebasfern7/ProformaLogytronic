@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:ProformaLogytronic.ViewModels"
         mc:Ignorable="d"
         Title="Proforma Logytronic" Height="750" Width="1000"
         WindowStartupLocation="CenterScreen"
@@ -47,7 +48,6 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -58,44 +58,17 @@
 
                     <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" Text="Datos del Cliente" FontWeight="Bold" FontSize="16" Margin="0,0,0,10" Foreground="#333"/>
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Razon Social:" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Cliente.Nombre, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,15,5" Padding="4"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Señor(es):" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ClienteNombre, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,15,5" Padding="4"/>
 
                     <TextBlock Grid.Row="1" Grid.Column="2" Text="NIT/CI:" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                    <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding Cliente.NitCi, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,5" Padding="4"/>
+                    <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding ClienteDocumento, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,5" Padding="4"/>
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Teléfono:" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Cliente.Telefono, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,15,5" Padding="4"/>
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Fecha:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding FechaCreacion, StringFormat=dd/MM/yyyy}" IsReadOnly="True" Background="#F0F0F0" Margin="0,5,15,5" Padding="4" IsTabStop="False"/>
 
-                    <TextBlock Grid.Row="2" Grid.Column="2" Text="Correo:" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                    <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding Cliente.Correo, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,5" Padding="4"/>
-
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Dirección:" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                    <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding Cliente.Direccion, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,5" Padding="4"/>
-                </Grid>
-            </Border>
-
-            <!-- Datos Proforma -->
-            <Border Grid.Column="2" Background="White" CornerRadius="8" Padding="20"
-                    BorderBrush="#E0E0E0" BorderThickness="1">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Información del Documento" FontWeight="Bold" FontSize="16" Margin="0,0,0,10" Foreground="#333"/>
-
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Fecha:" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Proforma.Fecha, StringFormat=dd/MM/yyyy}" IsReadOnly="True" Background="#F0F0F0" Margin="0,5,0,5" Padding="4" IsTabStop="False"/>
-
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Nº Proforma:" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Proforma.NumeroProforma, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,5" Padding="4"/>
+                    <TextBlock Grid.Row="2" Grid.Column="2" Text="Nº Proforma:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding NumeroSecuencia, StringFormat=D6}" IsReadOnly="True" Background="#F0F0F0" Margin="0,5,0,5" Padding="4" IsTabStop="False"/>
                 </Grid>
             </Border>
         </Grid>
@@ -103,7 +76,7 @@
         <!-- DataGrid (Productos) -->
         <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15"
                 BorderBrush="#E0E0E0" BorderThickness="1">
-            <DataGrid ItemsSource="{Binding Productos}" SelectedItem="{Binding ProductoSeleccionado}"
+            <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}"
                       AutoGenerateColumns="False" CanUserAddRows="False"
                       Background="White" RowBackground="White" AlternatingRowBackground="#F9F9F9"
                       BorderThickness="0" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EEEEEE"
@@ -129,7 +102,7 @@
                     </Style>
                 </DataGrid.Resources>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Código" Binding="{Binding Codigo, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
+                    <DataGridTextColumn Header="Código" Binding="{Binding CodigoProducto, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
                     <DataGridTextColumn Header="Descripción *" Binding="{Binding Descripcion, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
                     <DataGridTextColumn Header="Cant." Binding="{Binding Cantidad, UpdateSourceTrigger=PropertyChanged}" Width="80">
                         <DataGridTextColumn.ElementStyle>
@@ -141,7 +114,7 @@
                             <Style TargetType="TextBlock"><Setter Property="TextAlignment" Value="Right"/></Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
-                    <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=N2}" IsReadOnly="True" Width="120">
+                    <DataGridTextColumn Header="Total" Binding="{Binding Subtotal, StringFormat=N2}" IsReadOnly="True" Width="120">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock"><Setter Property="TextAlignment" Value="Right"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
                         </DataGridTextColumn.ElementStyle>
@@ -154,8 +127,8 @@
         <Border Grid.Row="3" Background="White" CornerRadius="8" Padding="15,20" Margin="0,0,0,15"
                 BorderBrush="#E0E0E0" BorderThickness="1" HorizontalAlignment="Right" MinWidth="300">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <TextBlock Text="Total General:" FontSize="18" VerticalAlignment="Center" Margin="0,0,20,0" Foreground="#555"/>
-                <TextBlock Text="{Binding TotalFinal, StringFormat=C2}" FontSize="24" FontWeight="Bold" Foreground="#005A9E"/>
+                <TextBlock Text="Total:" FontSize="18" VerticalAlignment="Center" Margin="0,0,20,0" Foreground="#555"/>
+                <TextBlock Text="{Binding Total, StringFormat=C2}" FontSize="24" FontWeight="Bold" Foreground="#005A9E"/>
             </StackPanel>
         </Border>
 
@@ -167,15 +140,15 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0" Orientation="Horizontal">
-                <Button Command="{Binding AgregarProductoCommand}" Content="Agregar Producto" Padding="15,10" Margin="0,0,10,0" 
+                <Button Command="{Binding AgregarItemCommand}" Content="Agregar Producto" Padding="15,10" Margin="0,0,10,0" 
                         Background="#E5F3FF" BorderThickness="0" Foreground="#005A9E" FontWeight="SemiBold" Cursor="Hand"/>
-                <Button Command="{Binding EliminarProductoCommand}" Content="Eliminar Seleccionado" Padding="15,10" Margin="0,0,10,0"
+                <Button Command="{Binding EliminarItemCommand}" Content="Eliminar Seleccionado" Padding="15,10" Margin="0,0,10,0"
                         Background="#FFF0F0" BorderThickness="0" Foreground="#D13438" FontWeight="SemiBold" Cursor="Hand"/>
-                <Button Command="{Binding LimpiarFormularioCommand}" Content="Limpiar Todo" Padding="15,10"
+                <Button Command="{Binding LimpiarCommand}" Content="Limpiar Todo" Padding="15,10"
                         Background="#F5F5F5" BorderThickness="0" Foreground="#666" Cursor="Hand"/>
             </StackPanel>
 
-            <Button Grid.Column="1" Command="{Binding GenerarPdfCommand}" Content="Generar PDF" Padding="30,10"
+            <Button Grid.Column="1" Command="{Binding GenerarYGuardarCommand}" Content="Generar PDF" Padding="30,10"
                     Background="#0078D7" Foreground="White" FontWeight="Bold" FontSize="16" Cursor="Hand" BorderThickness="0">
                 <Button.Style>
                     <Style TargetType="Button">

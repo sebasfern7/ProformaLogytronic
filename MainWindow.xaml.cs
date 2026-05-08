@@ -1,4 +1,6 @@
 using System.Windows;
+using ProformaLogytronic.Repositories;
+using ProformaLogytronic.Services;
 using ProformaLogytronic.ViewModels;
 
 namespace ProformaLogytronic
@@ -8,7 +10,13 @@ namespace ProformaLogytronic
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainViewModel();
+
+            // Inyección de dependencias manual para el MVP
+            var repository = new JsonProformaRepository();
+            var pdfService = new PdfService();
+            var dialogService = new DialogService();
+
+            DataContext = new ProformaViewModel(repository, pdfService, dialogService);
         }
     }
 }
