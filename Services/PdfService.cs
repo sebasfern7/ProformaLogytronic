@@ -1,28 +1,57 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using ProformaLogytronic.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Previewer;
 
 namespace ProformaLogytronic.Services
 {
     public class PdfService : IPdfService
     {
-        public PdfService()
+        private static readonly CultureInfo CulturaMeses = CultureInfo.GetCultureInfo("es-ES");
+
+        private readonly IApplicationSettingsStore _settingsStore;
+
+        public PdfService(IApplicationSettingsStore settingsStore)
         {
+            _settingsStore = settingsStore;
             // QuestPDF requiere configurar el modo de licencia
             QuestPDF.Settings.License = LicenseType.Community;
         }
 
-        public string Generar(Proforma proforma, string directorioBase)
+        private string ResolvePdfRoot()
         {
-            // Estructura de carpetas: /Proformas/AAAA/MM/
+            var configured = _settingsStore.Load().PdfOutputDirectory?.Trim();
+            if (string.IsNullOrEmpty(configured))
+                return AppContext.BaseDirectory;
+
+            if (!Path.IsPathRooted(configured))
+                return AppContext.BaseDirectory;
+
+            try
+            {
+                var full = Path.GetFullPath(configured);
+                if (!Directory.Exists(full))
+                    Directory.CreateDirectory(full);
+                return full;
+            }
+            catch
+            {
+                return AppContext.BaseDirectory;
+            }
+        }
+
+        public string Generar(Proforma proforma)
+        {
+            string directorioBase = ResolvePdfRoot();
+            // Estructura: Proformas / Año / Nombre del mes (español), ej. Proformas\2026\Mayo
             string year = proforma.FechaCreacion.Year.ToString();
-            string month = proforma.FechaCreacion.Month.ToString("D2");
-            string relativeFolder = Path.Combine("Proformas", year, month);
+            string monthFolder = CulturaMeses.TextInfo.ToTitleCase(
+                proforma.FechaCreacion.ToString("MMMM", CulturaMeses));
+            string relativeFolder = Path.Combine("Proformas", year, monthFolder);
             string targetDir = Path.Combine(directorioBase, relativeFolder);
 
             if (!Directory.Exists(targetDir))
@@ -69,6 +98,12 @@ namespace ProformaLogytronic.Services
                             {
                                 c.Item().Text(t => { t.Span("Señor(es): ").SemiBold(); t.Span(proforma.ClienteNombre); });
                                 c.Item().Text(t => { t.Span("NIT/CI: ").SemiBold(); t.Span(proforma.ClienteDocumento); });
+                                if (!string.IsNullOrWhiteSpace(proforma.ClienteTelefono))
+                                    c.Item().Text(t => { t.Span("Teléfono: ").SemiBold(); t.Span(proforma.ClienteTelefono); });
+                                if (!string.IsNullOrWhiteSpace(proforma.ClienteCorreo))
+                                    c.Item().Text(t => { t.Span("Correo: ").SemiBold(); t.Span(proforma.ClienteCorreo); });
+                                if (!string.IsNullOrWhiteSpace(proforma.ClienteDireccion))
+                                    c.Item().Text(t => { t.Span("Dirección: ").SemiBold(); t.Span(proforma.ClienteDireccion); });
                             });
                         });
 

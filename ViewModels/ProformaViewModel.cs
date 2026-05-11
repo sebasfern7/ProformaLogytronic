@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Input;
 using ProformaLogytronic.Models;
@@ -18,6 +19,12 @@ namespace ProformaLogytronic.ViewModels
         private readonly IPdfService _pdfService;
         private readonly IDialogService _dialogService;
 
+        public class MesOpcion
+        {
+            public string Nombre { get; set; } = string.Empty;
+            public int MesNumero { get; set; } // -1 = Todos
+        }
+
         private string _clienteNombre = string.Empty;
         public string ClienteNombre
         {
@@ -30,6 +37,27 @@ namespace ProformaLogytronic.ViewModels
         {
             get => _clienteDocumento;
             set => SetProperty(ref _clienteDocumento, value);
+        }
+
+        private string _clienteTelefono = string.Empty;
+        public string ClienteTelefono
+        {
+            get => _clienteTelefono;
+            set => SetProperty(ref _clienteTelefono, value);
+        }
+
+        private string _clienteCorreo = string.Empty;
+        public string ClienteCorreo
+        {
+            get => _clienteCorreo;
+            set => SetProperty(ref _clienteCorreo, value);
+        }
+
+        private string _clienteDireccion = string.Empty;
+        public string ClienteDireccion
+        {
+            get => _clienteDireccion;
+            set => SetProperty(ref _clienteDireccion, value);
         }
 
         private DateTime _fechaCreacion = DateTime.Now;
@@ -73,6 +101,96 @@ namespace ProformaLogytronic.ViewModels
         public ICommand EliminarItemCommand { get; }
         public ICommand LimpiarCommand { get; }
         public ICommand GenerarYGuardarCommand { get; }
+        public ICommand AbrirConfiguracionCommand { get; }
+
+        public ICommand BuscarHistorialCommand { get; }
+        public ICommand LimpiarFiltrosHistorialCommand { get; }
+        public ICommand AbrirProformaHistorialCommand { get; }
+        public ICommand AbrirPdfHistorialCommand { get; }
+
+        private int _mainSelectedTabIndex;
+        public int MainSelectedTabIndex
+        {
+            get => _mainSelectedTabIndex;
+            set
+            {
+                if (SetProperty(ref _mainSelectedTabIndex, value))
+                {
+                    OnPropertyChanged(nameof(IsProformaTabSelected));
+                }
+            }
+        }
+
+        public bool IsProformaTabSelected => MainSelectedTabIndex == 0;
+
+        public System.Collections.ObjectModel.ObservableCollection<MesOpcion> MesesHistorial { get; } = new()
+        {
+            new MesOpcion { Nombre = "Todos", MesNumero = -1 },
+            new MesOpcion { Nombre = "Enero", MesNumero = 1 },
+            new MesOpcion { Nombre = "Febrero", MesNumero = 2 },
+            new MesOpcion { Nombre = "Marzo", MesNumero = 3 },
+            new MesOpcion { Nombre = "Abril", MesNumero = 4 },
+            new MesOpcion { Nombre = "Mayo", MesNumero = 5 },
+            new MesOpcion { Nombre = "Junio", MesNumero = 6 },
+            new MesOpcion { Nombre = "Julio", MesNumero = 7 },
+            new MesOpcion { Nombre = "Agosto", MesNumero = 8 },
+            new MesOpcion { Nombre = "Septiembre", MesNumero = 9 },
+            new MesOpcion { Nombre = "Octubre", MesNumero = 10 },
+            new MesOpcion { Nombre = "Noviembre", MesNumero = 11 },
+            new MesOpcion { Nombre = "Diciembre", MesNumero = 12 }
+        };
+
+        private MesOpcion? _mesSeleccionadoHistorial;
+        public MesOpcion? MesSeleccionadoHistorial
+        {
+            get => _mesSeleccionadoHistorial;
+            set
+            {
+                if (SetProperty(ref _mesSeleccionadoHistorial, value))
+                {
+                    // No filtrar en cada cambio de texto/mes automáticamente; se filtra con Buscar
+                }
+            }
+        }
+
+        private string _filtroClienteHistorial = string.Empty;
+        public string FiltroClienteHistorial
+        {
+            get => _filtroClienteHistorial;
+            set => SetProperty(ref _filtroClienteHistorial, value);
+        }
+
+        private string _filtroCodigoHistorial = string.Empty;
+        public string FiltroCodigoHistorial
+        {
+            get => _filtroCodigoHistorial;
+            set => SetProperty(ref _filtroCodigoHistorial, value);
+        }
+
+        private string _filtroDescripcionHistorial = string.Empty;
+        public string FiltroDescripcionHistorial
+        {
+            get => _filtroDescripcionHistorial;
+            set => SetProperty(ref _filtroDescripcionHistorial, value);
+        }
+
+        public System.Collections.ObjectModel.ObservableCollection<Proforma> HistorialFiltrado { get; } = new();
+
+        private Proforma? _selectedHistoryProforma;
+        public Proforma? SelectedHistoryProforma
+        {
+            get => _selectedHistoryProforma;
+            set => SetProperty(ref _selectedHistoryProforma, value);
+        }
+
+        private System.Collections.Generic.List<Proforma> _historialOriginal = new();
+
+        private static bool ContainsIgnoreCase(string? source, string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return true;
+            if (string.IsNullOrWhiteSpace(source)) return false;
+            return source.IndexOf(value.Trim(), System.StringComparison.OrdinalIgnoreCase) >= 0;
+        }
 
         public ProformaViewModel(IProformaRepository repository, IPdfService pdfService, IDialogService dialogService)
         {
@@ -84,9 +202,22 @@ namespace ProformaLogytronic.ViewModels
             EliminarItemCommand = new RelayCommand(_ => EliminarItem(), _ => SelectedItem != null);
             LimpiarCommand = new RelayCommand(_ => Limpiar());
             GenerarYGuardarCommand = new RelayCommand(_ => GenerarYGuardar(), _ => CanGenerar());
+            AbrirConfiguracionCommand = new RelayCommand(_ => AbrirConfiguracion());
+
+            BuscarHistorialCommand = new RelayCommand(_ => BuscarHistorial());
+            LimpiarFiltrosHistorialCommand = new RelayCommand(_ => LimpiarFiltrosHistorial());
+            AbrirProformaHistorialCommand = new RelayCommand(_ => AbrirProformaHistorial(), _ => SelectedHistoryProforma != null);
+            AbrirPdfHistorialCommand = new RelayCommand(_ => AbrirPdfHistorial(), _ => SelectedHistoryProforma != null);
 
             Items.CollectionChanged += Items_CollectionChanged;
             
+            // Pestaña principal por defecto
+            MainSelectedTabIndex = 0;
+            MesSeleccionadoHistorial = MesesHistorial.FirstOrDefault(m => m.MesNumero == -1);
+
+            // Cargar historial desde el JSON local
+            CargarHistorial();
+
             Limpiar(); // Inicializar estado
         }
 
@@ -140,10 +271,120 @@ namespace ProformaLogytronic.ViewModels
         {
             ClienteNombre = string.Empty;
             ClienteDocumento = string.Empty;
+            ClienteTelefono = string.Empty;
+            ClienteCorreo = string.Empty;
+            ClienteDireccion = string.Empty;
             FechaCreacion = DateTime.Now;
             NumeroSecuencia = _repository.GenerarSiguienteNumero();
             Items.Clear();
             AgregarItem(); // Siempre empezar con una fila
+        }
+
+        private void AbrirConfiguracion()
+        {
+            _dialogService.ShowSettings();
+        }
+
+        private void CargarHistorial()
+        {
+            _historialOriginal = _repository.ObtenerTodas()
+                .OrderByDescending(p => p.FechaCreacion)
+                .ToList();
+
+            FiltrarHistorial();
+        }
+
+        private void BuscarHistorial()
+        {
+            FiltrarHistorial();
+        }
+
+        private void LimpiarFiltrosHistorial()
+        {
+            MesSeleccionadoHistorial = MesesHistorial.FirstOrDefault(m => m.MesNumero == -1);
+            FiltroClienteHistorial = string.Empty;
+            FiltroCodigoHistorial = string.Empty;
+            FiltroDescripcionHistorial = string.Empty;
+
+            FiltrarHistorial();
+        }
+
+        private void FiltrarHistorial()
+        {
+            IEnumerable<Proforma> query = _historialOriginal;
+
+            if (MesSeleccionadoHistorial != null && MesSeleccionadoHistorial.MesNumero != -1)
+            {
+                query = query.Where(p => p.FechaCreacion.Month == MesSeleccionadoHistorial.MesNumero);
+            }
+
+            if (!string.IsNullOrWhiteSpace(FiltroClienteHistorial))
+            {
+                query = query.Where(p => ContainsIgnoreCase(p.ClienteNombre, FiltroClienteHistorial));
+            }
+
+            if (!string.IsNullOrWhiteSpace(FiltroCodigoHistorial))
+            {
+                query = query.Where(p => p.Items.Any(i => ContainsIgnoreCase(i.CodigoProducto, FiltroCodigoHistorial)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(FiltroDescripcionHistorial))
+            {
+                query = query.Where(p => p.Items.Any(i => ContainsIgnoreCase(i.Descripcion, FiltroDescripcionHistorial)));
+            }
+
+            var result = query.OrderByDescending(p => p.FechaCreacion).ToList();
+
+            HistorialFiltrado.Clear();
+            foreach (var p in result)
+                HistorialFiltrado.Add(p);
+        }
+
+        private void AbrirProformaHistorial()
+        {
+            if (SelectedHistoryProforma == null)
+                return;
+
+            var p = SelectedHistoryProforma;
+
+            // Cargar en el editor actual
+            ClienteNombre = p.ClienteNombre;
+            ClienteDocumento = p.ClienteDocumento;
+            ClienteTelefono = p.ClienteTelefono;
+            ClienteCorreo = p.ClienteCorreo;
+            ClienteDireccion = p.ClienteDireccion;
+            FechaCreacion = p.FechaCreacion;
+            NumeroSecuencia = p.NumeroSecuencia;
+
+            Items.Clear();
+            foreach (var item in p.Items)
+            {
+                Items.Add(new ProformaItem
+                {
+                    CodigoProducto = item.CodigoProducto,
+                    Descripcion = item.Descripcion,
+                    Cantidad = item.Cantidad,
+                    PrecioUnitario = item.PrecioUnitario
+                });
+            }
+
+            // Volver a la pestaña de proforma
+            MainSelectedTabIndex = 0;
+        }
+
+        private void AbrirPdfHistorial()
+        {
+            if (SelectedHistoryProforma == null)
+                return;
+
+            var path = SelectedHistoryProforma.RutaPdf;
+            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            {
+                _dialogService.ShowError("No se encontró el PDF para la proforma seleccionada (RutaPdf vacía o archivo inexistente).");
+                return;
+            }
+
+            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
         }
 
         private bool CanGenerar()
@@ -163,6 +404,9 @@ namespace ProformaLogytronic.ViewModels
                     FechaCreacion = this.FechaCreacion,
                     ClienteNombre = this.ClienteNombre,
                     ClienteDocumento = this.ClienteDocumento,
+                    ClienteTelefono = this.ClienteTelefono,
+                    ClienteCorreo = this.ClienteCorreo,
+                    ClienteDireccion = this.ClienteDireccion,
                     Subtotal = this.Subtotal,
                     Total = this.Total,
                     Items = this.Items.ToList()
@@ -172,8 +416,7 @@ namespace ProformaLogytronic.ViewModels
                 _repository.Guardar(proforma);
 
                 // 2. Generar PDF
-                string baseDir = AppContext.BaseDirectory;
-                string pdfPath = _pdfService.Generar(proforma, baseDir);
+                string pdfPath = _pdfService.Generar(proforma);
 
                 // 3. Actualizar ruta en JSON
                 proforma.RutaPdf = pdfPath;

@@ -13,8 +13,9 @@ namespace ProformaLogytronic
 
             // Inyección de dependencias manual para el MVP
             var repository = new JsonProformaRepository();
-            var pdfService = new PdfService();
-            var dialogService = new DialogService();
+            var settingsStore = new JsonApplicationSettingsStore();
+            var pdfService = new PdfService(settingsStore);
+            var dialogService = new DialogService(settingsStore);
 
             DataContext = new ProformaViewModel(repository, pdfService, dialogService);
         }

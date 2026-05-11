@@ -4,12 +4,17 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:ProformaLogytronic.ViewModels"
+        xmlns:conv="clr-namespace:System.Windows.Controls;assembly=PresentationFramework"
         mc:Ignorable="d"
         Title="Proforma Logytronic" Height="750" Width="1000"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI" FontSize="14"
         Background="#F5F6F8">
     
+    <Window.Resources>
+        <conv:BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Window.Resources>
+
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" /> <!-- Header -->
@@ -19,18 +24,59 @@
             <RowDefinition Height="Auto" /> <!-- Botones -->
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,15"
-                BorderBrush="#E0E0E0" BorderThickness="1">
-            <Grid>
-                <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
-                    <TextBlock Text="LOGYTRONIC" FontSize="26" FontWeight="Bold" Foreground="#005A9E"/>
-                    <TextBlock Text="Soluciones Tecnológicas" FontSize="14" Foreground="#777"/>
-                </StackPanel>
-                <TextBlock Text="PROFORMA DE VENTA" FontSize="22" FontWeight="SemiBold" 
-                           HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#333"/>
-            </Grid>
-        </Border>
+        <!-- Configuración arriba; header (banner) debajo -->
+        <Grid Grid.Row="0" Margin="0,0,0,15">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Button Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Command="{Binding AbrirConfiguracionCommand}"
+                    Width="40" Height="40" Padding="0" Margin="0,0,0,8"
+                    Background="Transparent" BorderThickness="0" Cursor="Hand"
+                    ToolTip="Configuración">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="Chrome" Background="{TemplateBinding Background}"
+                                            CornerRadius="8" BorderThickness="0">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Chrome" Property="Background" Value="#EEEEEE"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="Chrome" Property="Background" Value="#E0E0E0"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE713;" FontSize="18" Foreground="#444"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Button>
+
+            <Border Grid.Row="1"
+                    Background="White" CornerRadius="8" Padding="20"
+                    BorderBrush="#E0E0E0" BorderThickness="1">
+                <Grid>
+                    <Image HorizontalAlignment="Left" VerticalAlignment="Center"
+                           Source="/Assets/Logo/logyLogo.jpeg"
+                           Stretch="Uniform"
+                           MaxHeight="72"
+                           SnapsToDevicePixels="True"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <TextBlock Text="PROFORMA DE VENTA" FontSize="22" FontWeight="SemiBold"
+                               HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#333"/>
+                </Grid>
+            </Border>
+        </Grid>
 
         <!-- Forms -->
         <Grid Grid.Row="1" Margin="0,0,0,15">
@@ -71,64 +117,196 @@
                     <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding NumeroSecuencia, StringFormat=D6}" IsReadOnly="True" Background="#F0F0F0" Margin="0,5,0,5" Padding="4" IsTabStop="False"/>
                 </Grid>
             </Border>
+
+            <!-- Datos adicionales del cliente (opcional): teléfono, correo, dirección -->
+            <Border Grid.Column="2" Background="White" CornerRadius="8" Padding="20"
+                    BorderBrush="#E0E0E0" BorderThickness="1">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                               Text="Datos adicionales" FontWeight="Bold" FontSize="16" Margin="0,0,0,4" Foreground="#333"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                               Text="Teléfono, correo y dirección solo si aplica a esta proforma." FontSize="12" Foreground="#888" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Teléfono:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ClienteTelefono, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,5" Padding="4"/>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Correo:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding ClienteCorreo, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,5" Padding="4"/>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Dirección:" VerticalAlignment="Top" Margin="0,5,10,5"/>
+                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding ClienteDireccion, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="0,5,0,0" Padding="4" MinHeight="20" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
+                </Grid>
+            </Border>
         </Grid>
 
-        <!-- DataGrid (Productos) -->
+        <!-- Tabs: Proforma / Historial -->
         <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15"
                 BorderBrush="#E0E0E0" BorderThickness="1">
-            <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}"
-                      AutoGenerateColumns="False" CanUserAddRows="False"
-                      Background="White" RowBackground="White" AlternatingRowBackground="#F9F9F9"
-                      BorderThickness="0" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EEEEEE"
-                      HeadersVisibility="Column" RowHeight="35">
-                <DataGrid.Resources>
-                    <Style TargetType="DataGridColumnHeader">
-                        <Setter Property="Background" Value="#F4F6F9"/>
-                        <Setter Property="FontWeight" Value="SemiBold"/>
-                        <Setter Property="Padding" Value="10,8"/>
-                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                        <Setter Property="BorderBrush" Value="#DDDDDD"/>
-                    </Style>
-                    <Style TargetType="DataGridCell">
-                        <Setter Property="Padding" Value="10,5" />
-                        <Setter Property="VerticalContentAlignment" Value="Center"/>
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="#E5F3FF" />
-                                <Setter Property="Foreground" Value="Black" />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </DataGrid.Resources>
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Código" Binding="{Binding CodigoProducto, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
-                    <DataGridTextColumn Header="Descripción *" Binding="{Binding Descripcion, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
-                    <DataGridTextColumn Header="Cant." Binding="{Binding Cantidad, UpdateSourceTrigger=PropertyChanged}" Width="80">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock"><Setter Property="TextAlignment" Value="Center"/></Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                    <DataGridTextColumn Header="Precio U." Binding="{Binding PrecioUnitario, StringFormat=N2, UpdateSourceTrigger=PropertyChanged}" Width="120">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock"><Setter Property="TextAlignment" Value="Right"/></Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                    <DataGridTextColumn Header="Total" Binding="{Binding Subtotal, StringFormat=N2}" IsReadOnly="True" Width="120">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock"><Setter Property="TextAlignment" Value="Right"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                </DataGrid.Columns>
-            </DataGrid>
+            <TabControl SelectedIndex="{Binding MainSelectedTabIndex, Mode=TwoWay}">
+                <TabItem Header="Proforma">
+                    <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}"
+                              AutoGenerateColumns="False" CanUserAddRows="False"
+                              Background="White" RowBackground="White" AlternatingRowBackground="#F9F9F9"
+                              BorderThickness="0" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EEEEEE"
+                              HeadersVisibility="Column" RowHeight="35">
+                        <DataGrid.Resources>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#F4F6F9"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Padding" Value="10,8"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                <Setter Property="BorderBrush" Value="#DDDDDD"/>
+                            </Style>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="Padding" Value="10,5" />
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#E5F3FF" />
+                                        <Setter Property="Foreground" Value="Black" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.Resources>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Código" Binding="{Binding CodigoProducto, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
+                            <DataGridTextColumn Header="Descripción *" Binding="{Binding Descripcion, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
+                            <DataGridTextColumn Header="Cant." Binding="{Binding Cantidad, UpdateSourceTrigger=PropertyChanged}" Width="80">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock"><Setter Property="TextAlignment" Value="Center"/></Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Precio U." Binding="{Binding PrecioUnitario, StringFormat=N2, UpdateSourceTrigger=PropertyChanged}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock"><Setter Property="TextAlignment" Value="Right"/></Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Total" Binding="{Binding Subtotal, StringFormat=N2}" IsReadOnly="True" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock"><Setter Property="TextAlignment" Value="Right"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+
+                <TabItem Header="Historial">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Filtros -->
+                        <Border Grid.Row="0" Background="#F7F8FA" CornerRadius="6" Padding="12"
+                                BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="140"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="140"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Mes:" VerticalAlignment="Center" Margin="0,0,10,8" Foreground="#555"/>
+                                <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,0,10,8"
+                                          SelectedItem="{Binding MesSeleccionadoHistorial, Mode=TwoWay}"
+                                          ItemsSource="{Binding MesesHistorial}" DisplayMemberPath="Nombre" />
+
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="Cliente:" VerticalAlignment="Center" Margin="0,0,10,8" Foreground="#555"/>
+                                <TextBox Grid.Row="0" Grid.Column="3" Margin="0,0,0,8" Padding="8,6" Text="{Binding FiltroClienteHistorial, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Código:" VerticalAlignment="Center" Margin="0,0,10,8" Foreground="#555"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,10,8" Padding="8,6" Text="{Binding FiltroCodigoHistorial, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <TextBlock Grid.Row="1" Grid.Column="2" Text="Descripción:" VerticalAlignment="Center" Margin="0,0,10,8" Foreground="#555"/>
+                                <TextBox Grid.Row="1" Grid.Column="3" Margin="0,0,0,8" Padding="8,6" Text="{Binding FiltroDescripcionHistorial, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <Button Grid.Row="2" Grid.Column="0" Content="Buscar" Padding="14,8" Margin="0,4,10,0"
+                                        Background="#E5F3FF" BorderThickness="0" Foreground="#005A9E" FontWeight="SemiBold"
+                                        Command="{Binding BuscarHistorialCommand}" />
+                                <Button Grid.Row="2" Grid.Column="1" Content="Limpiar filtros" Padding="14,8"
+                                        Background="#F5F5F5" BorderThickness="0" Foreground="#666" FontWeight="SemiBold"
+                                        Command="{Binding LimpiarFiltrosHistorialCommand}" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Lista -->
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding HistorialFiltrado}" SelectedItem="{Binding SelectedHistoryProforma}"
+                                  AutoGenerateColumns="False" CanUserAddRows="False"
+                                  Background="White" RowBackground="White" AlternatingRowBackground="#F9F9F9"
+                                  BorderThickness="0" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EEEEEE"
+                                  HeadersVisibility="Column" RowHeight="32">
+                            <DataGrid.Resources>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="#F4F6F9"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Padding" Value="10,8"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                    <Setter Property="BorderBrush" Value="#DDDDDD"/>
+                                </Style>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="Padding" Value="10,5" />
+                                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#E5F3FF" />
+                                            <Setter Property="Foreground" Value="Black" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.Resources>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Nº" Binding="{Binding NumeroSecuencia, StringFormat=D6}" Width="90" />
+                                <DataGridTextColumn Header="Fecha" Binding="{Binding FechaCreacion, StringFormat=dd/MM/yyyy}" Width="120" />
+                                <DataGridTextColumn Header="Cliente" Binding="{Binding ClienteNombre}" Width="*" />
+                                <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat={}{0:C2}}" Width="120" />
+                                <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="110" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Acciones historial -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,12,0,0">
+                            <Button Content="Abrir proforma" Padding="18,10" Margin="0,0,12,0"
+                                    Background="#E5F3FF" BorderThickness="0" Foreground="#005A9E" FontWeight="SemiBold"
+                                    Cursor="Hand" Command="{Binding AbrirProformaHistorialCommand}" />
+                            <Button Content="Abrir PDF" Padding="18,10"
+                                    Background="#FFF0F0" BorderThickness="0" Foreground="#D13438" FontWeight="SemiBold"
+                                    Cursor="Hand" Command="{Binding AbrirPdfHistorialCommand}" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+            </TabControl>
         </Border>
 
         <!-- Totals -->
         <Border Grid.Row="3" Background="White" CornerRadius="8" Padding="15,20" Margin="0,0,0,15"
-                BorderBrush="#E0E0E0" BorderThickness="1" HorizontalAlignment="Right" MinWidth="300">
+                BorderBrush="#E0E0E0" BorderThickness="1" HorizontalAlignment="Right" MinWidth="300"
+                Visibility="{Binding IsProformaTabSelected, Converter={StaticResource BoolToVisibilityConverter}}">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <TextBlock Text="Total:" FontSize="18" VerticalAlignment="Center" Margin="0,0,20,0" Foreground="#555"/>
-                <TextBlock Text="{Binding Total, StringFormat=C2}" FontSize="24" FontWeight="Bold" Foreground="#005A9E"/>
+                <TextBlock  Text="{Binding Total, StringFormat={}{0:C2}}" Language="es-BO" FontSize="24" FontWeight="Bold" Foreground="#005A9E"/>
             </StackPanel>
         </Border>
 
@@ -140,15 +318,15 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0" Orientation="Horizontal">
-                <Button Command="{Binding AgregarItemCommand}" Content="Agregar Producto" Padding="15,10" Margin="0,0,10,0" 
+                <Button Command="{Binding AgregarItemCommand}" IsEnabled="{Binding IsProformaTabSelected}" Content="Agregar Producto" Padding="15,10" Margin="0,0,10,0" 
                         Background="#E5F3FF" BorderThickness="0" Foreground="#005A9E" FontWeight="SemiBold" Cursor="Hand"/>
-                <Button Command="{Binding EliminarItemCommand}" Content="Eliminar Seleccionado" Padding="15,10" Margin="0,0,10,0"
+                <Button Command="{Binding EliminarItemCommand}" IsEnabled="{Binding IsProformaTabSelected}" Content="Eliminar Seleccionado" Padding="15,10" Margin="0,0,10,0"
                         Background="#FFF0F0" BorderThickness="0" Foreground="#D13438" FontWeight="SemiBold" Cursor="Hand"/>
-                <Button Command="{Binding LimpiarCommand}" Content="Limpiar Todo" Padding="15,10"
+                <Button Command="{Binding LimpiarCommand}" IsEnabled="{Binding IsProformaTabSelected}" Content="Limpiar Todo" Padding="15,10"
                         Background="#F5F5F5" BorderThickness="0" Foreground="#666" Cursor="Hand"/>
             </StackPanel>
 
-            <Button Grid.Column="1" Command="{Binding GenerarYGuardarCommand}" Content="Generar PDF" Padding="30,10"
+            <Button Grid.Column="1" Command="{Binding GenerarYGuardarCommand}" IsEnabled="{Binding IsProformaTabSelected}" Content="Generar PDF" Padding="30,10"
                     Background="#0078D7" Foreground="White" FontWeight="Bold" FontSize="16" Cursor="Hand" BorderThickness="0">
                 <Button.Style>
                     <Style TargetType="Button">
